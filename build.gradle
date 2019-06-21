@@ -1,0 +1,66 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+/*
+buildscript 中的声明是gradle脚本自身需要使用的资源。
+可以声明的资源包括依赖项、第三方插件、maven仓库地址等
+ */
+buildscript {
+    // 提供需要下载依赖插件的仓库
+    repositories {
+        google()
+        jcenter()
+    }
+    // 配置 gradle 本身需要依赖的插件
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.0'
+    }
+}
+
+/*
+allprojects块的repositories用于多项目构建，为所有项目提供共同所需依赖包。
+而子项目可以配置自己的repositories以获取自己独需的依赖包。
+ */
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+// ext 为 project 自定义属性的命名空间
+ext {
+    compileSdkVersion = 28 // 编译 Android 工程 SDK 版本
+    buildToolsVersion = '28.0.3' // Android SDK build-tools aapt.jar dex.jar 可以执行 Android 项目的构建、打包任务
+
+    minSdkVersion = 16
+    targetSdkVersion = 23
+    testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+    versionCode = 1
+    versionName = "1.0.0"
+    applicationId = "com.bruce.gradle"
+    androidSupportSdkVersion = "28.0.0"
+
+    /*
+    * ext 除了自定义属性，还可以创建闭包方法
+    * 自定义设置 build.gradle android {} 内容
+    * @param project 在 gradle 每一个 build.gradle 都对应一个 project
+    */
+    setDefaultConfig = { project ->
+        project.android {
+            compileSdkVersion rootProject.compileSdkVersion // 是编译 moudle 所依赖的Android SDK的版本
+            buildToolsVersion rootProject.buildToolsVersion // 是构建该Android工程所用构建工具的版本
+            // defaultConfig是默认的配置，它是一个ProductFlavor 可以根据不同的渠道打不同的包
+            defaultConfig {
+                applicationId rootProject.applicationId
+                minSdkVersion rootProject.minSdkVersion
+                targetSdkVersion rootProject.targetSdkVersion
+                versionCode rootProject.versionCode
+                versionName rootProject.versionName
+                testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

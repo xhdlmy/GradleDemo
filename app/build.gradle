@@ -1,0 +1,123 @@
+apply plugin: 'com.android.application'
+
+// android gradle 插件提供的唯一配置入口
+android {
+
+//    compileSdkVersion rootProject.compileSdkVersion
+//    buildToolsVersion rootProject.buildToolsVersion
+    rootProject.setDefaultConfig project
+
+    // ProductFlavor 构建的产品的佐料 可以构建不同的包
+    // 如果不自定义 ProductFlavor 那么就会使用默认的 defaultConfig,它们将覆盖defaultConfig{}中设置的相关值
+    flavorDimensions ("channel", "money")
+    productFlavors {
+        google { dimension "channel" }
+        yingyongbao { dimension "channel" }
+        huawei { dimension "channel" }
+
+        vip { dimension "money" }
+        free { dimension "money" }
+    }
+
+    // all 函数遍历 productFlavors
+    productFlavors.all { flavor ->
+        // 这是一个 map
+         flavor.manifestPlaceholders = [
+//                applicationId : "com.bruce.${flavor.name}",
+                CHANNEL : flavor.name,
+                MTA_APPKEY : "AE326WQFEU6E",
+                MTA_CHANNEL : flavor.name,
+        ]
+        def entry = flavor.manifestPlaceholders.entrySet()
+        logger.quiet("${entry.key} : ${entry.value}")
+    }
+
+    /*通过读取文件(全局配置文件)的方式*/
+    signingConfigs {
+        release {
+            // 加载资源
+//            Properties properties = new Properties()
+//            InputStream inputStream = project.rootProject.file('local.properties').newDataInputStream() ;
+//            properties.load(inputStream)
+            // 读取文件|字段
+//            def _storeFile = properties.getProperty('storeFile')
+//            def key_keyAlias = properties.getProperty('keyAlias')
+//            def key_keyPassword = properties.getProperty('keyPassword') ;
+//            def key_storePassword = properties.getProperty('storePassword') ;
+
+            // 所有 build.gradle （Project）能读取 gradle.properties 属性
+            def _storeFile = "C:\\Users\\Bruce\\bruce.jks"
+            def key_keyAlias = project.keyAlias
+            def key_keyPassword = project.password
+            logger.quiet("file:${_storeFile}");
+            logger.quiet("key_keyAlias:${key_keyAlias}");
+            logger.quiet("key_keyPassword:${key_keyPassword}");
+
+//            keyAlias key_keyAlias
+//            keyPassword key_keyPassword
+//            storeFile file(_storeFile)
+//            storePassword key_keyPassword
+
+            keyAlias "key_bruce"
+            keyPassword "bruce123"
+            storeFile file("C:\\Users\\Bruce\\bruce.jks")
+            storePassword "bruce123"
+        }
+    }
+
+    // 构建类型, 此处配置debug和release版本的一些参数,像混淆、签名配置.
+    buildTypes {
+        release {
+            minifyEnabled true // 打开混淆
+            shrinkResources true // 资源压缩
+            zipAlignEnabled true // 资源按照 4 字节对齐
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+            signingConfig signingConfigs.release //签名
+        }
+        debug {
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+        }
+    }
+
+    // 修改 apk 名称
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'release') {
+            variant.outputs.all {
+                // 自定义输出路径
+                variant.packageApplication.outputDirectory = new File(project.rootDir.absolutePath + File.separator + "outputs")
+                outputFileName = "beehouse_${variant.flavorName}_v${variant.versionName}_${time()}.apk"
+            }
+        }
+    }
+
+}
+
+// 自定义Java方法--生成时间
+// 方法的定义一定不能省略括号，只是在调用方法的时候，如果没有参数，或者参数为闭包的时候可以省略
+static def time() {
+    return new Date().format('yyyyMMdd')
+}
+
+// app module dependencies
+dependencies {
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    // test
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    // support
+    api "com.android.support:support-v4:$rootProject.androidSupportSdkVersion"
+    api "com.android.support:appcompat-v7:$rootProject.androidSupportSdkVersion"
+    api "com.android.support:support-annotations:$rootProject.androidSupportSdkVersion"
+    // Tenent MTA
+    implementation 'com.qq.mta:mta:3.4.2'
+    implementation 'com.tencent.mid:mid:3.73-release'
+}
+
+// Task 执行打印任务
+//task printFlavor (dependsOn : 'rootProject:assembleRelease') {
+//    doLast {
+//
+//    }
+//}
